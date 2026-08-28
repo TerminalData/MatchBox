@@ -6,4 +6,6 @@
 struct Inventory {
   std::queue<Order> price_level;
   int quantity;
+
+  Inventory() { quantity = 0; }
 };
