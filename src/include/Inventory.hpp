@@ -1,6 +1,9 @@
 
 #include <queue>
 
+#include "Order.hpp"
+
 struct Inventory {
-  std::queue<Order>
-}
+  std::queue<Order> price_level;
+  int quantity;
+};
