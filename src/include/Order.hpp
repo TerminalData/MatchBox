@@ -1,10 +1,12 @@
+#pragma once
 #include <cstdint>
 
 /**
  * Basic creation of an order object.
  */
 struct Order {
-  int price;
+  uint64_t price;
+  int action;
   int size;
   int order_id;
   uint64_t timestamp;
