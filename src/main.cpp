@@ -54,6 +54,8 @@ int main() {
 
       Order input_order{price, size, order_id, timestamp, buy};
 
+      // TODO: add call to service function
+
     } catch (const json::parse_error& e) {
       std::cerr << "Parse error from input file on line " << order_count + 1
                 << ":" << e.what() << "\n";

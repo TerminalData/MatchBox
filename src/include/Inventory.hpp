@@ -8,7 +8,7 @@
  * to maintain the best price first, then oldest offer first logic.
  */
 struct Inventory {
-  std::queue<Order> order_age;
+  std::queue<Order> order_queue;
   int quantity;
 
   Inventory() { quantity = 0; }
