@@ -44,7 +44,7 @@ int main() {
       ++order_count;
 
       // Extract values
-      if (order["action"] == "T") continue;
+      if (order["action"] == "T" || order["action"] == "F") continue;
       std::string action = order["action"];
       uint64_t price = order["price"];
       int size = order["size"];
@@ -52,7 +52,7 @@ int main() {
       uint64_t timestamp = order["hd"]["ts_event"];
       bool buy = order["side"] == "B" ? true : false;
 
-      // TODO: create prder object here and call funtion from Trader.cpp
+      Order input_order{price, size, order_id, timestamp, buy};
 
     } catch (const json::parse_error& e) {
       std::cerr << "Parse error from input file on line " << order_count + 1
