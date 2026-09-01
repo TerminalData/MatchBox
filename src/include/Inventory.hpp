@@ -1,5 +1,5 @@
 #pragma once
-#include <queue>
+#include <list>
 
 #include "Order.hpp"
 
@@ -8,7 +8,8 @@
  * to maintain the best price first, then oldest offer first logic.
  */
 struct Inventory {
-  std::queue<Order> order_queue;
+  using Order_Id = int;
+  std::list<Order> order_queue;
   int quantity;
 
   Inventory() { quantity = 0; }
