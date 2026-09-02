@@ -41,11 +41,13 @@ $(TEST_TARGET): $(TEST_OBJS) $(ENGINE_OBJS) | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $^ $(GTEST_LIBS) -o $@
 
 # Compile Application Sources
-$(OBJ_DIR)/engine/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)/engine
+$(OBJ_DIR)/engine/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 # Compile Test Sources
-$(OBJ_DIR)/tests/%.o: $(TEST_DIR)/%.cpp | $(OBJ_DIR)/tests
+$(OBJ_DIR)/tests/%.o: $(TEST_DIR)/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 # Directory Generation
