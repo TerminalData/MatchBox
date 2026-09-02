@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <iostream>
 #include <map>
@@ -9,7 +10,7 @@
 #include "Order.hpp"
 
 namespace Matching_Engine {
-using Price = int;
+using Price = uint64_t;
 
 /*
  * Manages the orders and redistributes them according to their

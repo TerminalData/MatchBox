@@ -1,10 +1,11 @@
 #include "../include/Matching_Engine.hpp"
 
+#include <cstdint>
 #include <cstdio>
 #include <iostream>
 
 namespace Matching_Engine {
-using Price = int;
+using Price = uint64_t;
 
 void match_order(std::map<Price, Inventory, std::less<Price>>& sell_book,
                  std::map<Price, Inventory, std::greater<Price>>& buy_book,
@@ -28,6 +29,13 @@ void match_order(std::map<Price, Inventory, std::less<Price>>& sell_book,
   }
 }
 
+/*
+ * Fills the order if possible, creates a buy order otherwise.
+ * @param sell_book is the active list of sell orders
+ * @param buy_book is the active list of buy orders
+ * @param order is the order to be traded or added to a book
+ */
+namespace {
 void match_buy(std::map<Price, Inventory, std::less<Price>>& sell_book,
                std::map<Price, Inventory, std::greater<Price>>& buy_book,
                Order& order) {
@@ -63,6 +71,12 @@ void match_buy(std::map<Price, Inventory, std::less<Price>>& sell_book,
   }
 }
 
+/*
+ * Fills the order if possible, creates a sell order otherwise.
+ * @param sell_book is the active list of sell orders
+ * @param buy_book is the active list of buy orders
+ * @param order is the order to be traded or added to a book
+ */
 void match_sell(std::map<Price, Inventory, std::less<Price>>& sell_book,
                 std::map<Price, Inventory, std::greater<Price>>& buy_book,
                 Order& order) {
@@ -98,4 +112,5 @@ void match_sell(std::map<Price, Inventory, std::less<Price>>& sell_book,
     }
   }
 }
+}  // namespace
 }  // namespace Matching_Engine

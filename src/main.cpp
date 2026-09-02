@@ -6,19 +6,21 @@
 #include <nlohmann/json.hpp>
 
 #include "include/Inventory.hpp"
+#include "include/Matching_Engine.hpp"
 
 using json = nlohmann::json;
 
 int main() {
-  using Price = int;
+  using Price = uint64_t;
 
   // Create the Sell order book
   std::map<Price, Inventory, std::less<Price>> sell_book;
 
   // Create the Buy order book
   std::map<Price, Inventory, std::greater<Price>> buy_book;
-
-  std::cout << "Input json file name to be used. Must be located in test/."
+  std::cout << "#################### MatchBox ###########################"
+            << std::endl;
+  std::cout << "Input json file name to be used. Must be located in test/"
             << std::endl;
   std::string file_name;
   std::cin >> file_name;
@@ -52,9 +54,9 @@ int main() {
       uint64_t timestamp = order["hd"]["ts_event"];
       bool buy = order["side"] == "B" ? true : false;
 
-      Order input_order{price, size, order_id, timestamp, buy};
+      Order input_order{price, action, size, order_id, timestamp, buy};
 
-      // TODO: add call to service function
+      Matching_Engine::match_order(sell_book, buy_book, input_order);
 
     } catch (const json::parse_error& e) {
       std::cerr << "Parse error from input file on line " << order_count + 1
