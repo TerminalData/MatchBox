@@ -82,12 +82,12 @@ void match_sell(std::map<Price, Inventory, std::less<Price>>& sell_book,
         buy_book.erase(best_price_it);
       }
     }
-    // If there's no match, creates an order on the sell_book
-    if (order.size > 0) {
-      auto& inv = sell_book[order.price];
-      inv.quantity += order.size;
-      inv.order_queue.push_back(order);
-    }
+  }
+  // If there's no match, creates an order on the sell_book
+  if (order.size > 0) {
+    auto& inv = sell_book[order.price];
+    inv.quantity += order.size;
+    inv.order_queue.push_back(order);
   }
 }
 }  // namespace

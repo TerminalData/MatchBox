@@ -53,6 +53,7 @@ void cancel(std::map<Price, Inventory, Compare>& book, Order& cancel_req) {
     if (cancel_req.size >= it->size) {
       concerned_inv.quantity -= it->size;
       concerned_inv.order_queue.erase(it);
+      if (concerned_inv.quantity == 0) book.erase(price_it);
     } else {
       it->size -= cancel_req.size;
       concerned_inv.quantity -= cancel_req.size;
