@@ -5,7 +5,7 @@
 #include <map>
 #include <nlohmann/json.hpp>
 
-#include "include/Inventory.hpp"
+#include "Inventory.hpp"
 #include "include/Matching_Engine.hpp"
 
 using json = nlohmann::json;

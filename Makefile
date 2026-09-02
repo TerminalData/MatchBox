@@ -6,7 +6,7 @@ GTEST_LIBS := -lgtest -lgtest_main -pthread
 
 # Directories
 SRC_DIR   := src
-TEST_DIR  := tests
+TEST_DIR  := test
 OBJ_DIR   := obj
 BIN_DIR   := bin
 
@@ -15,7 +15,7 @@ TARGET      := $(BIN_DIR)/MatchBox
 TEST_TARGET := $(BIN_DIR)/run_tests
 
 # Engine Sources & Objects (excludes main.cpp so tests can link engine code cleanly)
-ENGINE_SRCS := $(filter-out $(SRC_DIR)/main.cpp, $(wildcard $(SRC_DIR)/*.cpp))
+ENGINE_SRCS := $(filter-out $(SRC_DIR)/main.cpp, $(shell find $(SRC_DIR) -name '*.cpp'))
 ENGINE_OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/engine/%.o, $(ENGINE_SRCS))
 
 # Main App Objects
