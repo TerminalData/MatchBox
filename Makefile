@@ -2,6 +2,7 @@
 CXX      := g++
 CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -O3
 CPPFLAGS := -Iinclude -MMD -MP
+GTEST_LIBS := -lgtest -lgtest_main -pthread
 
 # Directories
 SRC_DIR   := src
@@ -37,7 +38,7 @@ $(TARGET): $(MAIN_OBJ) $(ENGINE_OBJS) | $(BIN_DIR)
 
 # Link Test Runner Executable (Engine logic + Test files, no main.cpp)
 $(TEST_TARGET): $(TEST_OBJS) $(ENGINE_OBJS) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ $(GTEST_LIBS) -o $@
 
 # Compile Application Sources
 $(OBJ_DIR)/engine/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)/engine
