@@ -112,3 +112,30 @@ TEST_F(MatchingEngineTest, CancelsRestingOrderCorrectly) {
   EXPECT_TRUE(sell_book.empty());
   EXPECT_EQ(sell_book.find(100), sell_book.end());
 }
+
+// 7. Verify partial cancellation reduces size but keeps position
+TEST_F(MatchingEngineTest, PartialCancelReducesSize) {
+  Order s1{100, "A", 10, 1, 0, false};
+  Matching_Engine::match_order(sell_book, buy_book, s1);
+
+  // Cancel 4 units of the 10 unit order
+  Order c1{100, "C", 4, 1, 0, false};
+  Matching_Engine::match_order(sell_book, buy_book, c1);
+
+  ASSERT_EQ(sell_book.size(), 1);
+  EXPECT_EQ(sell_book[100].quantity, 6);
+  EXPECT_EQ(sell_book[100].order_queue.front().size, 6);
+}
+
+// 8. Verify cancelling more units than the order has gracefully erases it
+TEST_F(MatchingEngineTest, OverCancelErasesOrder) {
+  Order s1{100, "A", 5, 1, 0, false};
+  Matching_Engine::match_order(sell_book, buy_book, s1);
+
+  // Try to cancel 20 units of a 5 unit order
+  Order c1{100, "C", 20, 1, 0, false};
+  Matching_Engine::match_order(sell_book, buy_book, c1);
+
+  EXPECT_TRUE(sell_book.empty());
+  EXPECT_EQ(sell_book.find(100), sell_book.end());
+}
