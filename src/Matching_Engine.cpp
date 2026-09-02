@@ -108,7 +108,7 @@ void match_order(std::map<Price, Inventory, std::less<Price>>& sell_book,
       match_sell(sell_book, buy_book, order);
     }
   } else {
-    std::cerr << "Error, order action %s not recognized." + order.action
+    std::cerr << "Error, order action " << order.action << " not recognized."
               << std::endl;
     exit(EXIT_FAILURE);
   }

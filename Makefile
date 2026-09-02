@@ -1,6 +1,6 @@
 # Compiler and Flags
 CXX      := g++
-CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -O3
+CXXFLAGS := -std=c++20 -Wall -Wextra -Wpedantic -O3 -g
 CPPFLAGS := -Iinclude -MMD -MP
 GTEST_LIBS := -lgtest -lgtest_main -pthread
 
@@ -71,3 +71,12 @@ run: $(TARGET)
 .PHONY: test
 test: $(TEST_TARGET)
 	./$(TEST_TARGET)
+
+# Run Valgrind memory check on the test suite
+.PHONY: memcheck
+memcheck: $(TEST_TARGET)
+	valgrind --leak-check=full \
+	         --show-leak-kinds=all \
+	         --track-origins=yes \
+	         --error-exitcode=1 \
+	         ./$(TEST_TARGET)
