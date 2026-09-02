@@ -55,7 +55,7 @@ void match_buy(std::map<Price, Inventory, std::less<Price>>& sell_book,
       sell_book.erase(best_price_it);
     }
   }
-  // If there's not match, creates an order on the buy_book
+  // If there's no match, creates an order on the buy_book
   if (order.size > 0) {
     auto& inv = buy_book[order.price];
     inv.order_queue.push_back(order);
@@ -63,6 +63,39 @@ void match_buy(std::map<Price, Inventory, std::less<Price>>& sell_book,
   }
 }
 
-// TODO: implement match_sell based on match_buy
+void match_sell(std::map<Price, Inventory, std::less<Price>>& sell_book,
+                std::map<Price, Inventory, std::greater<Price>>& buy_book,
+                Order& order) {
+  // If there's a matching price, buy
+  while (!buy_book.empty() && order.price <= buy_book.begin()->first &&
+         order.size != 0) {
+    auto best_price_it = buy_book.begin();
+    Inventory& inv = best_price_it->second;
 
+    while (!inv.order_queue.empty() && order.size > 0) {
+      Order& next_to_buy = inv.order_queue.front();
+
+      if (order.size >= next_to_buy.size) {
+        order.size -= next_to_buy.size;
+        inv.quantity -= next_to_buy.size;
+        inv.order_queue.pop_front();
+      } else {
+        inv.quantity -= order.size;
+        next_to_buy.size -= order.size;
+        order.size = 0;
+        return;
+      }
+
+      if (inv.order_queue.empty()) {
+        buy_book.erase(best_price_it);
+      }
+    }
+    // If there's no match, creates an order on the sell_book
+    if (order.size > 0) {
+      auto& inv = sell_book[order.price];
+      inv.quantity += order.size;
+      inv.order_queue.push_back(order);
+    }
+  }
+}
 }  // namespace Matching_Engine
