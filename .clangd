@@ -1,2 +1,2 @@
 CompileFlags:
-  Add: [-Iinclude, -srd=c++20]
+  Add: [-Iinclude, -std=c++20]
