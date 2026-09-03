@@ -38,11 +38,15 @@
 *.exe
 *.out
 *.app
+MatchBox
 
 # Build directories
 build/
 Build/
 build-*/
+bin/
+obj/
+
 
 # CMake generated files
 CMakeFiles/

@@ -45,7 +45,6 @@ int main() {
     try {
       // Parse current line
       json order = json::parse(line);
-      ++order_count;
 
       // Extract values
       if (order["action"] == "T" || order["action"] == "F" ||
@@ -71,6 +70,7 @@ int main() {
 
       Matching_Engine::match_order(sell_book, buy_book, input_order);
 
+      ++order_count;
     } catch (const json::exception& e) {
       std::cerr << "JSON error on line " << order_count << ":" << e.what()
                 << "\n";

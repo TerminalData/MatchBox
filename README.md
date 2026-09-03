@@ -8,7 +8,7 @@ I am building this to learn more about low-level latency-sensitive programming.
 I plan on starting on a very basic version of a matching algorithm, and gradually
 add to it in order to make it more complete, faster and more efficient. The progress is calculated
 via a benchmark of a file I fetched from databento.com for every trade from MSFT
-on the NASDAQ for 2026, August 25 which represents 2,159,727 trades. I will always
+on the NASDAQ for 2026, August 25 which represents 2,075,526 orders. I will always
 use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ## Version History
@@ -17,7 +17,7 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 This is a naive version I built just to have a platform unto which I can try
 latency reducing techniques and learn how to better operate in a low-level
-programming setting. It currently hits 5603.67 ms.
+programming setting. It currently hits 5643.26 ms.
 
 - Added the initial C++20 limit-order matching engine.
 - Added buy and sell order books with price-time priority.
