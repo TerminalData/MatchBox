@@ -13,6 +13,13 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ## Version History
 
+### 1.1.0
+Switched my home made parser to simdjson on-demand API. It's awesome.
+
+    * Parse and match:  604.12 ms
+    * Parse:            377.63 ms
+    * Match:            139.89 ms
+
 ### 1.0.1
 
 This is a naive version I built just to have a platform unto which I can try
