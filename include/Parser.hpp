@@ -6,6 +6,7 @@
 #include <optional>
 
 #include "Order.hpp"
+#include "simdjson.h"
 
 using Price = uint64_t;
 /*
@@ -22,4 +23,5 @@ std::ifstream open_file();
  * @return either nothing if the order is one not considered by the match
  * engine, or the order object.
  */
-std::optional<Order> parse_json(const std::string& line);
+std::optional<Order> parse_json(const std::string& line,
+                                simdjson::ondemand::parser& parser);

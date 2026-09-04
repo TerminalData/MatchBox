@@ -7,6 +7,9 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
+
+#include "simdjson.h"
 
 using json = nlohmann::json;
 
@@ -28,36 +31,50 @@ std::ifstream open_file() {
   return file;
 }
 
-std::optional<Order> parse_json(const std::string& line) {
+std::optional<Order> parse_json(const std::string& line,
+                                simdjson::ondemand::parser& parser) {
   try {
-    // Parse current line
-    json order = json::parse(line);
+    simdjson::padded_string padded_line(line);
+    simdjson::ondemand::document order = parser.iterate(padded_line);
+
+    // Skip useless orders form input file
+    std::string_view action = order["action"];
+    if (action == "T" || action == "F" || action == "R") return std::nullopt;
 
     // Extract values
-    if (order["action"] == "T" || order["action"] == "F" ||
-        order["action"] == "R")
-      return std::nullopt;
-    std::string action = order["action"];
-    uint64_t price = order["price"].is_string()
-                         ? std::stoull(order["price"].get<std::string>())
-                         : order["price"].get<uint64_t>();
-    int size = order["size"].is_string()
-                   ? std::stoi(order["size"].get<std::string>())
-                   : order["size"].get<int>();
-    int order_id = order["order_id"].is_string()
-                       ? std::stoi(order["order_id"].get<std::string>())
-                       : order["order_id"].get<int>();
-    uint64_t timestamp =
-        order["hd"]["ts_event"].is_string()
-            ? std::stoull(order["hd"]["ts_event"].get<std::string>())
-            : order["hd"]["ts_event"].get<uint64_t>();
+    simdjson::ondemand::value price_val = order["price"];
+    uint64_t price;
+    if (price_val.type() == simdjson::ondemand::json_type::string) {
+      std::string_view str_val = price_val.get_string();
+      price = std::stoull(std::string(str_val));
+    } else {
+      price = price_val.get_uint64();
+    }
+
+    simdjson::ondemand::value size_val = order["size"];
+    int size;
+    if (size_val.type() == simdjson::ondemand::json_type::string) {
+      std::string_view str_val = size_val.get_string();
+      size = std::stoi(std::string(str_val));
+    } else {
+      size = size_val.get_int64();
+    }
+
+    simdjson::ondemand::value id_val = order["order_id"];
+    int order_id;
+    if (id_val.type() == simdjson::ondemand::json_type::string) {
+      std::string_view str_val = id_val.get_string();
+      order_id = std::stoi(std::string(str_val));
+    } else {
+      order_id = id_val.get_int64();
+    }
+
     bool buy = order["side"] == "B" ? true : false;
 
-    Order input_order{price, action, size, order_id, timestamp, buy};
-    return input_order;
+    return Order{price, std::string(action), size, order_id, buy};
 
-  } catch (const json::exception& e) {
+  } catch (const simdjson::simdjson_error& e) {
     std::cerr << "JSON error on line " << e.what() << "\n";
+    return std::nullopt;
   }
-  return std::nullopt;
 }
