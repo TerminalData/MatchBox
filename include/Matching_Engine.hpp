@@ -29,6 +29,7 @@ void match_order(std::map<Price, Inventory, std::less<Price>>& sell_book,
  * from it. If the amount removed is bigger than available, cancel entire order.
  * Iterates through Inventory's list in O(n), accepted since that list
  * should never be big enough to justify  O(1) implementation.
+ *
  * @param book is the active list of buy orders
  * @param order is the order to be traded or added to a book
  */
