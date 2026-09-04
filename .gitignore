@@ -73,3 +73,6 @@ Testing/
 
 # json files fetched from databento
 *.json
+
+#personnal notes
+*.txt
