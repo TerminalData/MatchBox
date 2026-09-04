@@ -13,11 +13,15 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ## Version History
 
-### 1.0.0 (September 2, 2026)
+### 1.0.1
 
 This is a naive version I built just to have a platform unto which I can try
 latency reducing techniques and learn how to better operate in a low-level
-programming setting. It currently hits 5643.26 ms.
+programming setting. 
+
+    * Parse and match:  5719.17 ms
+    * Parse:            5571.07 ms
+    * Match:             155.41 ms
 
 - Added the initial C++20 limit-order matching engine.
 - Added buy and sell order books with price-time priority.
