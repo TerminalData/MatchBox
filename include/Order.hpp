@@ -12,10 +12,9 @@ struct Order {
   std::string action;
   int size;
   int order_id;
-  uint64_t timestamp;
   bool buy;
 
   Order() = delete;
-  Order(uint64_t p, std::string a, int s, int o, uint64_t t, bool b)
-      : price(p), action(a), size(s), order_id(o), timestamp(t), buy(b) {}
+  Order(uint64_t p, std::string a, int s, int o, bool b)
+      : price(p), action(a), size(s), order_id(o), buy(b) {}
 };
