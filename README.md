@@ -13,6 +13,15 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ## Version History
 
+### 1.1.1
+Switched order object values to unsigned integers of the minimal possible size and switched the string value of action to enum to save space.
+it just seems to lighten the load on the matching engine, but put it right back on the parsing somehow.
+    
+    * Parse and match:  613.91 ms
+    * Parse:            398.99 ms
+    * Match:            118.60 ms
+
+
 ### 1.1.0
 Switched my home made parser to simdjson on-demand API. It's awesome.
 
