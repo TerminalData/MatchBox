@@ -53,7 +53,7 @@ std::optional<Order> parse_json(const std::string &line,
     }
 
     simdjson::ondemand::value size_val = order["size"];
-    int size;
+    uint16_t size;
     if (size_val.type() == simdjson::ondemand::json_type::string) {
       std::string_view str_val = size_val.get_string();
       size = std::stoi(std::string(str_val));
@@ -62,7 +62,7 @@ std::optional<Order> parse_json(const std::string &line,
     }
 
     simdjson::ondemand::value id_val = order["order_id"];
-    int order_id;
+    uint32_t order_id;
     if (id_val.type() == simdjson::ondemand::json_type::string) {
       std::string_view str_val = id_val.get_string();
       order_id = std::stoi(std::string(str_val));
