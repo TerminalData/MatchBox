@@ -5,40 +5,37 @@
 #include "Matching_Engine.hpp"
 #include "Order.hpp"
 using Price = uint64_t;
-class MatchingEngineTest : public ::testing::Test
-{
-protected:
+class MatchingEngineTest : public ::testing::Test {
+ protected:
   std::map<Price, Inventory, std::less<Price>> sell_book;
   std::map<Price, Inventory, std::greater<Price>> buy_book;
 };
 
 // 1. Verify resting order insertion when books cannot cross
-TEST_F(MatchingEngineTest, PlacesRestingOrdersWithoutCrossing)
-{
-  Order b1{100, Order_action::Add, 10, 1, 0, true};
-  Order s1{105, Order_action::Add, 10, 2, 0, false};
+TEST_F(MatchingEngineTest, PlacesRestingOrdersWithoutCrossing) {
+  Order b1{100, Order_action::Add, 10, 1, true};
+  Order s1{105, Order_action::Add, 10, 2, false};
 
   Matching_Engine::match_order(sell_book, buy_book, b1);
   Matching_Engine::match_order(sell_book, buy_book, s1);
 
   ASSERT_EQ(buy_book.size(), 1);
   EXPECT_EQ(buy_book[100].quantity, 10);
-  EXPECT_EQ(b1.size, 10); // Not consumed
+  EXPECT_EQ(b1.size, 10);  // Not consumed
 
   ASSERT_EQ(sell_book.size(), 1);
   EXPECT_EQ(sell_book[105].quantity, 10);
-  EXPECT_EQ(s1.size, 10); // Not consumed
+  EXPECT_EQ(s1.size, 10);  // Not consumed
 }
 
 // 2. Verify partial fills and correct reduction of volume
-TEST_F(MatchingEngineTest, HandlesPartialFillsCorrectly)
-{
+TEST_F(MatchingEngineTest, HandlesPartialFillsCorrectly) {
   // Resting ask: 10 units at $100
-  Order s1{100, Order_action::Add, 10, 1, 0, false};
+  Order s1{100, Order_action::Add, 10, 1, false};
   Matching_Engine::match_order(sell_book, buy_book, s1);
 
   // Incoming bid: 4 units at $100
-  Order b1{100, Order_action::Add, 4, 2, 0, true};
+  Order b1{100, Order_action::Add, 4, 2, true};
   Matching_Engine::match_order(sell_book, buy_book, b1);
 
   // Incoming order should be fully consumed
@@ -51,12 +48,11 @@ TEST_F(MatchingEngineTest, HandlesPartialFillsCorrectly)
 }
 
 // 3. Verify price levels are cleanly erased when completely exhausted
-TEST_F(MatchingEngineTest, ErasesExhaustedPriceLevel)
-{
-  Order s1{100, Order_action::Add, 5, 1, 0, false};
+TEST_F(MatchingEngineTest, ErasesExhaustedPriceLevel) {
+  Order s1{100, Order_action::Add, 5, 1, false};
   Matching_Engine::match_order(sell_book, buy_book, s1);
 
-  Order b1{100, Order_action::Add, 5, 2, 0, true};
+  Order b1{100, Order_action::Add, 5, 2, true};
   Matching_Engine::match_order(sell_book, buy_book, b1);
 
   EXPECT_EQ(b1.size, 0);
@@ -65,15 +61,14 @@ TEST_F(MatchingEngineTest, ErasesExhaustedPriceLevel)
 }
 
 // 4. Verify FIFO priority across multiple orders at the same price level
-TEST_F(MatchingEngineTest, RespectsFifoOrderPriority)
-{
-  Order s1{100, Order_action::Add, 5, 101, 0, false};
-  Order s2{100, Order_action::Add, 5, 102, 0, false};
+TEST_F(MatchingEngineTest, RespectsFifoOrderPriority) {
+  Order s1{100, Order_action::Add, 5, 101, false};
+  Order s2{100, Order_action::Add, 5, 102, false};
   Matching_Engine::match_order(sell_book, buy_book, s1);
   Matching_Engine::match_order(sell_book, buy_book, s2);
 
   // Aggressive buy consumes s1 fully, partially absorbs s2
-  Order b1{100, Order_action::Add, 7, 201, 0, true};
+  Order b1{100, Order_action::Add, 7, 201, true};
   Matching_Engine::match_order(sell_book, buy_book, b1);
 
   EXPECT_EQ(b1.size, 0);
@@ -87,15 +82,14 @@ TEST_F(MatchingEngineTest, RespectsFifoOrderPriority)
 }
 
 // 5. Verify aggressive orders sweeping through multiple price levels
-TEST_F(MatchingEngineTest, SweepsMultiplePriceLevelsAndRestsRemainder)
-{
-  Order s1{100, Order_action::Add, 5, 1, 0, false};
-  Order s2{101, Order_action::Add, 5, 2, 0, false};
+TEST_F(MatchingEngineTest, SweepsMultiplePriceLevelsAndRestsRemainder) {
+  Order s1{100, Order_action::Add, 5, 1, false};
+  Order s2{101, Order_action::Add, 5, 2, false};
   Matching_Engine::match_order(sell_book, buy_book, s1);
   Matching_Engine::match_order(sell_book, buy_book, s2);
 
   // Buy 15 units willing to pay up to $102
-  Order b1{102, Order_action::Add, 15, 3, 0, true};
+  Order b1{102, Order_action::Add, 15, 3, true};
   Matching_Engine::match_order(sell_book, buy_book, b1);
 
   // Both sell levels should be cleared
@@ -108,13 +102,12 @@ TEST_F(MatchingEngineTest, SweepsMultiplePriceLevelsAndRestsRemainder)
 }
 
 // 6. Verify cancellation logic on resting orders
-TEST_F(MatchingEngineTest, CancelsRestingOrderCorrectly)
-{
-  Order s1{100, Order_action::Add, 10, 1, 0, false};
+TEST_F(MatchingEngineTest, CancelsRestingOrderCorrectly) {
+  Order s1{100, Order_action::Add, 10, 1, false};
   Matching_Engine::match_order(sell_book, buy_book, s1);
 
   // Full cancel request
-  Order c1{100, Order_action::Cancel, 10, 1, 0, false};
+  Order c1{100, Order_action::Cancel, 10, 1, false};
   Matching_Engine::match_order(sell_book, buy_book, c1);
 
   EXPECT_TRUE(sell_book.empty());
@@ -122,13 +115,12 @@ TEST_F(MatchingEngineTest, CancelsRestingOrderCorrectly)
 }
 
 // 7. Verify partial cancellation reduces size but keeps position
-TEST_F(MatchingEngineTest, PartialCancelReducesSize)
-{
-  Order s1{100, Order_action::Add, 10, 1, 0, false};
+TEST_F(MatchingEngineTest, PartialCancelReducesSize) {
+  Order s1{100, Order_action::Add, 10, 1, false};
   Matching_Engine::match_order(sell_book, buy_book, s1);
 
   // Cancel 4 units of the 10 unit order
-  Order c1{100, Order_action::Cancel, 4, 1, 0, false};
+  Order c1{100, Order_action::Cancel, 4, 1, false};
 
   Matching_Engine::match_order(sell_book, buy_book, c1);
 
@@ -138,13 +130,12 @@ TEST_F(MatchingEngineTest, PartialCancelReducesSize)
 }
 
 // 8. Verify cancelling more units than the order has gracefully erases it
-TEST_F(MatchingEngineTest, OverCancelErasesOrder)
-{
-  Order s1{100, Order_action::Add, 5, 1, 0, false};
+TEST_F(MatchingEngineTest, OverCancelErasesOrder) {
+  Order s1{100, Order_action::Add, 5, 1, false};
   Matching_Engine::match_order(sell_book, buy_book, s1);
 
   // Try to cancel 20 units of a 5 unit order
-  Order c1{100, Order_action::Cancel, 20, 1, 0, false};
+  Order c1{100, Order_action::Cancel, 20, 1, false};
   Matching_Engine::match_order(sell_book, buy_book, c1);
 
   EXPECT_TRUE(sell_book.empty());
