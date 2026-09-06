@@ -13,13 +13,16 @@
 #include "simdjson.h"
 
 void print_result(size_t order_count,
-                  std::chrono::duration<double, std::milli> final_time) {
-  std::cout << order_count << " orders in " << final_time.count() << " ms.\n"
+                  std::chrono::duration<double, std::milli> final_time,
+                  double throughput) {
+  std::cout << order_count << " orders in " << final_time.count() << " ms."
             << std::endl;
+  std::cout << "Throughput MOPS = " << throughput << "\n" << std::endl;
 }
 
 int main() {
   using Price = uint64_t;
+  double total_orders = 2075526.0;
 
   // creating parser
   simdjson::ondemand::parser parser;
@@ -42,10 +45,13 @@ int main() {
   }
 
   auto end_time = std::chrono::high_resolution_clock::now();
-  auto final_time = end_time - start_time;
+  std::chrono::duration<double, std::milli> final_time = end_time - start_time;
+
+  double throughput =
+      ((total_orders * 1000.0) / final_time.count()) / 1000000.0;
 
   std::cout << "Parse and match ";
-  print_result(order_count, final_time);
+  print_result(order_count, final_time, throughput);
 
   // Benchmark of parsing
   file.clear();
@@ -68,10 +74,13 @@ int main() {
     }
   }
   end_time = std::chrono::high_resolution_clock::now();
+
   final_time = end_time - start_time;
 
+  throughput = ((total_orders * 1000.0) / final_time.count()) / 1000000.0;
+
   std::cout << "Parse ";
-  print_result(order_count, final_time);
+  print_result(order_count, final_time, throughput);
   file.close();
 
   // Benchmark of matching
@@ -83,8 +92,10 @@ int main() {
   end_time = std::chrono::high_resolution_clock::now();
   final_time = end_time - start_time;
 
+  throughput = ((total_orders * 1000.0) / final_time.count()) / 1000000.0;
+
   std::cout << "Match ";
-  print_result(order_count, final_time);
+  print_result(order_count, final_time, throughput);
 
   return 0;
 }

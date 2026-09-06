@@ -11,13 +11,20 @@ enum class Order_action : uint8_t { Add = 0, Cancel = 1 };
  * always 9 or 10digits long, uint32_t fits that range.
  */
 struct Order {
+  // 8 byte
   uint64_t price;
-  Order_action action;
-  uint16_t size;
+
+  // 4 byte
   uint32_t order_id;
+
+  // 2 byte
+  uint32_t size;
+
+  // 1 byte
+  Order_action action;
   bool buy;
 
   Order() = delete;
-  Order(uint64_t p, Order_action(a), uint16_t s, uint32_t o, bool b)
-      : price(p), action(a), size(s), order_id(o), buy(b) {}
+  Order(uint64_t p, uint32_t o, uint16_t s, Order_action a, bool b)
+      : price(p), order_id(o), size(s), action(a), buy(b) {}
 };

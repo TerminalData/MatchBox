@@ -14,10 +14,7 @@ using json = nlohmann::json;
 std::ifstream open_file() {
   std::cout << "#################### MatchBox ###########################"
             << std::endl;
-  std::cout << "Input json file name to be used. Must be located in test/data/ "
-            << std::endl;
-  std::string file_name;
-  std::cin >> file_name;
+  std::string file_name = "test1.json";
 
   // Open file stream
   std::ifstream file("test/data/" + file_name);
@@ -72,7 +69,7 @@ std::optional<Order> parse_json(const std::string &line,
 
     bool buy = order["side"] == "B" ? true : false;
 
-    return Order{price, action, size, order_id, buy};
+    return Order{price, order_id, size, action, buy};
   } catch (const simdjson::simdjson_error &e) {
     std::cerr << "JSON error on line " << e.what() << "\n";
     return std::nullopt;
