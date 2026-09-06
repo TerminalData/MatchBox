@@ -13,14 +13,21 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ## Version History
 
-### 1.1.1
-Switched order object values to unsigned integers of the minimal possible size and switched the string value of action to enum to save space.
-it just seems to lighten the load on the matching engine, but put it right back on the parsing somehow.
+### 1.1.2
+Switched order object values to unsigned integers of the minimal possible size and switched the string value of action to enum to save space
+just seems to lighten the load on the matching engine, but puts it right back on the parsing somehow.
     
-    * Parse and match:  613.91 ms
-    * Parse:            398.99 ms
-    * Match:            118.60 ms
+    * Parse and match:  560.90 ms
+    * throughput MOPS:  4.01071
 
+    * Parse:            393.58 ms
+    * throughput MOPS:  5.21516
+
+    * Match:            122.58 ms
+    * throughput MOPS:  16.9316
+
+- Added throughput value in million of operations.
+- Switched the order of values in Order.hpp to save on padding space
 
 ### 1.1.0
 Switched my home made parser to simdjson on-demand API. It's awesome.
