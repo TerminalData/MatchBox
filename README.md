@@ -13,6 +13,21 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ## Version History
 
+### 1.2.0
+Refactored the parsing logic to use simdjon's zero copy parsing.
+    
+    * Parse and match:  405.267 ms
+    * throughput MOPS:  5.012138
+
+    * Parse:            285.199 ms
+    * throughput MOPS:  7.27747
+
+    * Match:            120.364 ms
+    * throughput MOPS:  17.2437
+
+- Fixed a bug where I was not casting correctly the parsed values for Orders.
+
+
 ### 1.1.2
 Switched order object values to unsigned integers of the minimal possible size and switched the string value of action to enum to save space
 just seems to lighten the load on the matching engine, but puts it right back on the parsing somehow.
