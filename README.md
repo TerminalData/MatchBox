@@ -15,7 +15,9 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ### 1.1.2
 Switched order object values to unsigned integers of the minimal possible size and switched the string value of action to enum to save space
-just seems to lighten the load on the matching engine, but puts it right back on the parsing somehow.
+just seems to lighten the load on the matching engine, but puts it right back on the parsing somehow. I think the throughput for the match is that 
+high because the 2mil orders fit into my very small Order object, allowing it to fit all 32mb on the L3 cache. That throughput should go down
+with time as I add functionnalities to my engine.
     
     * Parse and match:  560.90 ms
     * throughput MOPS:  4.01071
