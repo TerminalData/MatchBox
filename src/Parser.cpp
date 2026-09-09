@@ -75,7 +75,7 @@ std::optional<Order> parse_json(simdjson::ondemand::document_reference doc) {
 
     return Order{price, order_id, size, action, buy};
   } catch (const simdjson::simdjson_error &e) {
-    std::cerr << "JSON error on line " << e.what() << "\n";
+    std::cerr << "JSON error " << e.what() << "\n";
     return std::nullopt;
   }
 }

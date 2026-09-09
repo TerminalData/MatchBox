@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <map>
@@ -37,7 +38,11 @@ class Matching_Engine {
   void cancel_order(Order& cancel_req);
 
  public:
-  Matching_Engine() = default;
+  explicit Matching_Engine(std::size_t expected_active_orders = 2000000) {
+    if (expected_active_orders != 0) {
+      active_orders.reserve(expected_active_orders);
+    }
+  }
 
   /*
    * Manages the orders and redistributes them according to their

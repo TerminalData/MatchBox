@@ -1,13 +1,10 @@
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <map>
 #include <queue>
 
-#include "Inventory.hpp"
 #include "Matching_Engine.hpp"
 #include "Parser.hpp"
 #include "simdjson.h"
@@ -21,7 +18,6 @@ void print_result(size_t order_count,
 }
 
 int main() {
-  using Price = uint64_t;
   double total_orders = 2075526.0;
 
   std::cout << "#################### MatchBox ###########################"
@@ -29,9 +25,6 @@ int main() {
 
   // **************************************************************************
   // Benchmark of the whole system
-
-  std::map<Price, Inventory, std::less<Price>> sell_book;
-  std::map<Price, Inventory, std::greater<Price>> buy_book;
 
   simdjson::padded_string raw_file_data;
   simdjson::error_code error =
@@ -48,11 +41,14 @@ int main() {
   size_t order_count = 0;
 
   auto start_time = std::chrono::high_resolution_clock::now();
+
+  Matching_Engine engine;
+
   for (auto doc : stream) {
     std::optional<Order> order = parse_json(doc.value());
     if (order) {
       order_count++;
-      Matching_Engine::match_order(sell_book, buy_book, order.value());
+      engine.match_order(order.value());
     }
   }
   auto end_time = std::chrono::high_resolution_clock::now();
@@ -70,12 +66,11 @@ int main() {
   simdjson::ondemand::parser parser2;
   auto stream2 = parser2.iterate_many(raw_file_data).value();
 
-  std::map<Price, Inventory, std::less<Price>> sell_book2;
-  std::map<Price, Inventory, std::greater<Price>> buy_book2;
   order_count = 0;
   std::queue<Order> order_queue;
 
   start_time = std::chrono::high_resolution_clock::now();
+
   for (auto doc : stream2) {
     std::optional<Order> order = parse_json(doc.value());
     if (order) {
@@ -95,8 +90,10 @@ int main() {
   // **************************************************************************
   // Benchmark of matching
   start_time = std::chrono::high_resolution_clock::now();
+
+  Matching_Engine engine2;
   while (!order_queue.empty()) {
-    Matching_Engine::match_order(sell_book2, buy_book2, order_queue.front());
+    engine2.match_order(order_queue.front());
     order_queue.pop();
   }
   end_time = std::chrono::high_resolution_clock::now();
