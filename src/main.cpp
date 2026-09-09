@@ -19,6 +19,7 @@ void print_result(size_t order_count,
 
 int main() {
   double total_orders = 2075526.0;
+  double total_cancel = 0.0;
 
   std::cout << "#################### MatchBox ###########################"
             << std::endl;
@@ -47,6 +48,9 @@ int main() {
   for (auto doc : stream) {
     std::optional<Order> order = parse_json(doc.value());
     if (order) {
+      if (order->action == Order_action::Cancel) {
+        total_cancel++;
+      }
       order_count++;
       engine.match_order(order.value());
     }
@@ -57,6 +61,9 @@ int main() {
   double throughput =
       ((total_orders * 1000.0) / final_time.count()) / 1000000.0;
 
+  double cancel_ratio = (total_cancel / total_orders) * 100.0;
+
+  std::cout << "Canceled order ratio : " << cancel_ratio << "%" << std::endl;
   std::cout << "Parse and match ";
   print_result(order_count, final_time, throughput);
 
