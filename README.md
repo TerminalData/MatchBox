@@ -13,6 +13,21 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ## Version History
 
+### 1.2.2
+Refactored the matching logic to use an unordered map of active_orders. Also switched canceling logic to a lazy deletion (tombstoning),
+put the book object in the engine object itself and modified the tests to work with this. It's considerably slower, my matching is now 
+more twice as long, but I think this is the way to go, it's gonna allow optimization beyond the stats I was reaching before.
+
+    * Parse and match:  749.802 ms
+    * throughput MOPS:  2.7681
+
+    * Parse:            306.285 ms
+    * throughput MOPS:  6.77646
+
+    * Match:            256.425 ms
+    * throughput MOPS:  8.09409
+
+
 ### 1.2.0
 Refactored the parsing logic to use simdjon's zero copy parsing.
     
