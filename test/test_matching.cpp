@@ -1,143 +1,138 @@
 #include <gtest/gtest.h>
 
-#include <cstdint>
-
 #include "Matching_Engine.hpp"
 #include "Order.hpp"
-using Price = uint64_t;
-class MatchingEngineTest : public ::testing::Test {
- protected:
-  std::map<Price, Inventory, std::less<Price>> sell_book;
-  std::map<Price, Inventory, std::greater<Price>> buy_book;
+
+class MatchingEngineTest : public ::testing::Test
+{
+protected:
+    Matching_Engine engine;
 };
 
-// 1. Verify resting order insertion when books cannot cross
-TEST_F(MatchingEngineTest, PlacesRestingOrdersWithoutCrossing) {
-  Order b1{100, 1, 10, Order_action::Add, true};
-  Order s1{105, 2, 10, Order_action::Add, false};
+TEST_F(MatchingEngineTest, KeepsNonCrossingOrdersAvailable)
+{
+    Order buy{100, 1, 10, Order_action::Add, true};
+    Order sell{105, 2, 10, Order_action::Add, false};
+    engine.match_order(buy);
+    engine.match_order(sell);
 
-  Matching_Engine::match_order(sell_book, buy_book, b1);
-  Matching_Engine::match_order(sell_book, buy_book, s1);
+    Order take_buy{100, 3, 10, Order_action::Add, false};
+    Order take_sell{105, 4, 10, Order_action::Add, true};
+    engine.match_order(take_buy);
+    engine.match_order(take_sell);
 
-  ASSERT_EQ(buy_book.size(), 1);
-  EXPECT_EQ(buy_book[100].quantity, 10);
-  EXPECT_EQ(b1.size, 10);  // Not consumed
-
-  ASSERT_EQ(sell_book.size(), 1);
-  EXPECT_EQ(sell_book[105].quantity, 10);
-  EXPECT_EQ(s1.size, 10);  // Not consumed
+    EXPECT_EQ(take_buy.size, 0);
+    EXPECT_EQ(take_sell.size, 0);
 }
 
-// 2. Verify partial fills and correct reduction of volume
-TEST_F(MatchingEngineTest, HandlesPartialFillsCorrectly) {
-  // Resting ask: 10 units at $100
-  Order s1{100, 1, 10, Order_action::Add, false};
-  Matching_Engine::match_order(sell_book, buy_book, s1);
+TEST_F(MatchingEngineTest, HandlesPartialFills)
+{
+    Order sell{100, 1, 10, Order_action::Add, false};
+    Order buy{100, 2, 4, Order_action::Add, true};
+    engine.match_order(sell);
+    engine.match_order(buy);
 
-  // Incoming bid: 4 units at $100
-  Order b1{100, 2, 4, Order_action::Add, true};
-  Matching_Engine::match_order(sell_book, buy_book, b1);
+    EXPECT_EQ(buy.size, 0);
 
-  // Incoming order should be fully consumed
-  EXPECT_EQ(b1.size, 0);
-
-  // Resting level should reflect remaining size
-  ASSERT_NE(sell_book.find(100), sell_book.end());
-  EXPECT_EQ(sell_book[100].quantity, 6);
-  EXPECT_EQ(sell_book[100].order_queue.front().size, 6);
+    Order second_buy{100, 3, 10, Order_action::Add, true};
+    engine.match_order(second_buy);
+    EXPECT_EQ(second_buy.size, 4);
 }
 
-// 3. Verify price levels are cleanly erased when completely exhausted
-TEST_F(MatchingEngineTest, ErasesExhaustedPriceLevel) {
-  Order s1{100, 1, 5, Order_action::Add, false};
-  Matching_Engine::match_order(sell_book, buy_book, s1);
+TEST_F(MatchingEngineTest, FullyConsumedOrdersLeaveNoAvailableQuantity)
+{
+    Order sell{100, 1, 5, Order_action::Add, false};
+    Order buy{100, 2, 5, Order_action::Add, true};
+    engine.match_order(sell);
+    engine.match_order(buy);
 
-  Order b1{100, 2, 5, Order_action::Add, true};
-  Matching_Engine::match_order(sell_book, buy_book, b1);
-
-  EXPECT_EQ(b1.size, 0);
-  EXPECT_TRUE(sell_book.empty());
-  EXPECT_EQ(sell_book.find(100), sell_book.end());
+    Order follow_up{100, 3, 1, Order_action::Add, true};
+    engine.match_order(follow_up);
+    EXPECT_EQ(follow_up.size, 1);
 }
 
-// 4. Verify FIFO priority across multiple orders at the same price level
-TEST_F(MatchingEngineTest, RespectsFifoOrderPriority) {
-  Order s1{100, 101, 5, Order_action::Add, false};
-  Order s2{100, 102, 5, Order_action::Add, false};
-  Matching_Engine::match_order(sell_book, buy_book, s1);
-  Matching_Engine::match_order(sell_book, buy_book, s2);
+TEST_F(MatchingEngineTest, RespectsFifoOrderPriority)
+{
+    Order first{100, 101, 5, Order_action::Add, false};
+    Order second{100, 102, 5, Order_action::Add, false};
+    engine.match_order(first);
+    engine.match_order(second);
 
-  // Aggressive buy consumes s1 fully, partially absorbs s2
-  Order b1{100, 201, 7, Order_action::Add, true};
-  Matching_Engine::match_order(sell_book, buy_book, b1);
+    Order partial_buy{100, 201, 7, Order_action::Add, true};
+    engine.match_order(partial_buy);
 
-  EXPECT_EQ(b1.size, 0);
-  ASSERT_EQ(sell_book[100].order_queue.size(), 1);
+    Order cancel_second{100, 102, 3, Order_action::Cancel, false};
+    engine.match_order(cancel_second);
+    Order final_buy{100, 202, 3, Order_action::Add, true};
+    engine.match_order(final_buy);
 
-  // s1 must be gone; the remaining order at front must be s2
-  const Order &remaining = sell_book[100].order_queue.front();
-  EXPECT_EQ(remaining.order_id, 102);
-  EXPECT_EQ(remaining.size, 3);
-  EXPECT_EQ(sell_book[100].quantity, 3);
+    EXPECT_EQ(final_buy.size, 3);
 }
 
-// 5. Verify aggressive orders sweeping through multiple price levels
-TEST_F(MatchingEngineTest, SweepsMultiplePriceLevelsAndRestsRemainder) {
-  Order s1{100, 1, 5, Order_action::Add, false};
-  Order s2{101, 2, 5, Order_action::Add, false};
-  Matching_Engine::match_order(sell_book, buy_book, s1);
-  Matching_Engine::match_order(sell_book, buy_book, s2);
+TEST_F(MatchingEngineTest, SweepsMultiplePriceLevelsAndRestsRemainder)
+{
+    Order first_sell{100, 1, 5, Order_action::Add, false};
+    Order second_sell{101, 2, 5, Order_action::Add, false};
+    Order buy{102, 3, 15, Order_action::Add, true};
+    engine.match_order(first_sell);
+    engine.match_order(second_sell);
+    engine.match_order(buy);
 
-  // Buy 15 units willing to pay up to $102
-  Order b1{102, 3, 15, Order_action::Add, true};
-  Matching_Engine::match_order(sell_book, buy_book, b1);
+    EXPECT_EQ(buy.size, 5);
 
-  // Both sell levels should be cleared
-  EXPECT_TRUE(sell_book.empty());
-
-  // Remaining 5 units from the buy order must rest on the buy book
-  ASSERT_EQ(buy_book.size(), 1);
-  EXPECT_EQ(buy_book[102].quantity, 5);
-  EXPECT_EQ(buy_book[102].order_queue.front().size, 5);
+    Order take_remainder{102, 4, 5, Order_action::Add, false};
+    engine.match_order(take_remainder);
+    EXPECT_EQ(take_remainder.size, 0);
 }
 
-// 6. Verify cancellation logic on resting orders
-TEST_F(MatchingEngineTest, CancelsRestingOrderCorrectly) {
-  Order s1{100, 1, 10, Order_action::Add, false};
-  Matching_Engine::match_order(sell_book, buy_book, s1);
+TEST_F(MatchingEngineTest, FullCancellationPreventsMatching)
+{
+    Order buy{100, 1, 10, Order_action::Add, true};
+    engine.match_order(buy);
 
-  // Full cancel request
-  Order c1{100, 1, 10, Order_action::Cancel, false};
-  Matching_Engine::match_order(sell_book, buy_book, c1);
+    Order cancel{100, 1, 10, Order_action::Cancel, true};
+    engine.match_order(cancel);
 
-  EXPECT_TRUE(sell_book.empty());
-  EXPECT_EQ(sell_book.find(100), sell_book.end());
+    Order sell{100, 2, 10, Order_action::Add, false};
+    engine.match_order(sell);
+    EXPECT_EQ(sell.size, 10);
 }
 
-// 7. Verify partial cancellation reduces size but keeps position
-TEST_F(MatchingEngineTest, PartialCancelReducesSize) {
-  Order s1{100, 1, 10, Order_action::Add, false};
-  Matching_Engine::match_order(sell_book, buy_book, s1);
+TEST_F(MatchingEngineTest, PartialCancellationLeavesTheRemainingQuantity)
+{
+    Order sell{100, 1, 10, Order_action::Add, false};
+    engine.match_order(sell);
 
-  // Cancel 4 units of the 10 unit order
-  Order c1{100, 1, 4, Order_action::Cancel, false};
+    Order cancel{100, 1, 4, Order_action::Cancel, false};
+    engine.match_order(cancel);
 
-  Matching_Engine::match_order(sell_book, buy_book, c1);
-
-  ASSERT_EQ(sell_book.size(), 1);
-  EXPECT_EQ(sell_book[100].quantity, 6);
-  EXPECT_EQ(sell_book[100].order_queue.front().size, 6);
+    Order buy{100, 2, 10, Order_action::Add, true};
+    engine.match_order(buy);
+    EXPECT_EQ(buy.size, 4);
 }
 
-// 8. Verify cancelling more units than the order has gracefully erases it
-TEST_F(MatchingEngineTest, OverCancelErasesOrder) {
-  Order s1{100, 1, 5, Order_action::Add, false};
-  Matching_Engine::match_order(sell_book, buy_book, s1);
+TEST_F(MatchingEngineTest, OverCancellationRemovesTheAvailableQuantity)
+{
+    Order sell{100, 1, 5, Order_action::Add, false};
+    engine.match_order(sell);
 
-  // Try to cancel 20 units of a 5 unit order
-  Order c1{100, 1, 20, Order_action::Cancel, false};
-  Matching_Engine::match_order(sell_book, buy_book, c1);
+    Order cancel{100, 1, 20, Order_action::Cancel, false};
+    engine.match_order(cancel);
 
-  EXPECT_TRUE(sell_book.empty());
-  EXPECT_EQ(sell_book.find(100), sell_book.end());
+    Order buy{100, 2, 1, Order_action::Add, true};
+    engine.match_order(buy);
+    EXPECT_EQ(buy.size, 1);
+}
+
+TEST_F(MatchingEngineTest, MissingCancellationDoesNotCorruptTheEngine)
+{
+    Order cancel{100, 999, 10, Order_action::Cancel, true};
+    engine.match_order(cancel);
+
+    Order sell{100, 1, 5, Order_action::Add, false};
+    engine.match_order(sell);
+    Order buy{100, 2, 5, Order_action::Add, true};
+    engine.match_order(buy);
+
+    EXPECT_EQ(buy.size, 0);
 }
