@@ -1,16 +1,16 @@
 #pragma once
-#include <list>
+#include <cstdint>
 
 #include "Order.hpp"
 
 /**
- * Keeps the same price orders in a timestamp based queue
- * to maintain the best price first, then oldest offer first logic.
+ * Keeps the FIFO order of Orders via a linked list.
  */
 struct Inventory {
-  using Order_Id = int;
-  std::list<Order> order_queue;
-  int quantity;
+  uint32_t head = NULL_INDEX;
+  uint32_t tail = NULL_INDEX;
 
-  Inventory() { quantity = 0; }
+  uint64_t quantity = 0;
+
+  inline bool is_empty() const { return head == NULL_INDEX; }
 };
