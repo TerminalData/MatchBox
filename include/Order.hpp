@@ -27,6 +27,7 @@ struct Order {
   bool buy;
   bool is_canceled = false;
 
+  Order() = default;
   Order(uint64_t p, uint32_t o, uint32_t s, Order_action a, bool b)
       : price(p), order_id(o), size(s), action(a), buy(b) {}
 };

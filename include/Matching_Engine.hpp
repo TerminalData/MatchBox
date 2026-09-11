@@ -43,7 +43,7 @@ class Matching_Engine {
   void cancel_order(Order& cancel_req);
 
  public:
-  explicit Matching_Engine(std::size_t pool_size = 2000000) {
+  explicit Matching_Engine(std::size_t pool_size = 2100000) {
     pool.resize(pool_size);
 
     for (uint32_t i = 0; i < pool_size - 1; ++i) {
