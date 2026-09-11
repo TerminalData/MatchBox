@@ -104,7 +104,7 @@ programming setting.
 - Added GoogleTest coverage for the core matching behavior.
 - Added Make targets for building, running, testing, cleaning, and Valgrind checks.
 
-<details>
+</details>
 
 ## Features
 
