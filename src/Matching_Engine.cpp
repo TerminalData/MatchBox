@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <iostream>
 
+#include "Inventory.hpp"
 #include "Order.hpp"
 
 using Price = uint64_t;
@@ -145,24 +146,57 @@ void Matching_Engine::cancel_order(Order &cancel_req) {
     return;
   }
 
-  Order &order = pool[it->second];
+  const uint32_t current_index = it->second;
+  Order &order = pool[current_index];
+  const uint32_t amount_cancelled =
+      cancel_req.size < order.size ? cancel_req.size : order.size;
 
-  uint32_t amount_cancelled;
+  auto unlink_order = [&](auto &book) {
+    auto price_it = book.find(order.price);
+    if (price_it == book.end()) {
+      return;
+    }
+
+    Inventory &inv = price_it->second;
+    const uint32_t prev_index = order.prev_index;
+    const uint32_t next_index = order.next_index;
+
+    if (prev_index == NULL_INDEX) {
+      inv.head = next_index;
+    } else {
+      pool[prev_index].next_index = next_index;
+    }
+
+    if (next_index == NULL_INDEX) {
+      inv.tail = prev_index;
+    } else {
+      pool[next_index].prev_index = prev_index;
+    }
+
+    inv.quantity -= amount_cancelled;
+    if (inv.is_empty()) {
+      book.erase(price_it);
+    }
+  };
 
   if (cancel_req.size >= order.size) {
-    amount_cancelled = order.size;
-    pool[order.next_index].prev_index = order.prev_index;
-    pool[order.prev_index].next_index = order.next_index;
-    active_orders.erase(it);
-  } else {
-    amount_cancelled = cancel_req.size;
-    order.size -= amount_cancelled;
-  }
+    if (order.buy) {
+      unlink_order(buy_book);
+    } else {
+      unlink_order(sell_book);
+    }
 
-  if (order.buy) {
-    buy_book[order.price].quantity -= amount_cancelled;
+    active_orders.erase(it);
+    order.next_index = free_head;
+    order.prev_index = NULL_INDEX;
+    free_head = current_index;
   } else {
-    sell_book[order.price].quantity -= amount_cancelled;
+    order.size -= amount_cancelled;
+    if (order.buy) {
+      buy_book.find(order.price)->second.quantity -= amount_cancelled;
+    } else {
+      sell_book.find(order.price)->second.quantity -= amount_cancelled;
+    }
   }
 }
 
