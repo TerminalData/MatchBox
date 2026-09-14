@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <iostream>
 
+#include "Inventory.hpp"
 #include "Order.hpp"
 
 using Price = uint64_t;
@@ -19,18 +20,6 @@ void Matching_Engine::match_buy(Order &order) {
       const uint32_t current_index = inv.head;
       Order &next_to_sell = pool[current_index];
 
-      // Cleans up the possible canceled orders
-      if (next_to_sell.is_canceled) {
-        const uint32_t next_index = next_to_sell.next_index;
-        inv.head = next_index;
-        if (inv.head == NULL_INDEX) {
-          inv.tail = NULL_INDEX;
-        }
-        next_to_sell.next_index = free_head;
-        free_head = current_index;
-        continue;
-      }
-
       if (order.size >= next_to_sell.size) {
         const uint32_t next_index = next_to_sell.next_index;
         const uint32_t order_id = next_to_sell.order_id;
@@ -39,9 +28,12 @@ void Matching_Engine::match_buy(Order &order) {
         inv.head = next_index;
         if (inv.head == NULL_INDEX) {
           inv.tail = NULL_INDEX;
+        } else {
+          pool[inv.head].prev_index = NULL_INDEX;
         }
         active_orders.erase(order_id);
         next_to_sell.next_index = free_head;
+        next_to_sell.prev_index = NULL_INDEX;
         free_head = current_index;
       } else {
         next_to_sell.size -= order.size;
@@ -67,6 +59,7 @@ void Matching_Engine::match_buy(Order &order) {
     free_head = stored_order.next_index;
     stored_order = order;
     stored_order.next_index = NULL_INDEX;
+    stored_order.prev_index = inv.tail;
 
     if (inv.is_empty()) {
       inv.head = new_index;
@@ -90,18 +83,6 @@ void Matching_Engine::match_sell(Order &order) {
       const uint32_t current_index = inv.head;
       Order &next_to_buy = pool[current_index];
 
-      // cleans up the canceled orders
-      if (next_to_buy.is_canceled) {
-        const uint32_t next_index = next_to_buy.next_index;
-        inv.head = next_index;
-        if (inv.head == NULL_INDEX) {
-          inv.tail = NULL_INDEX;
-        }
-        next_to_buy.next_index = free_head;
-        free_head = current_index;
-        continue;
-      }
-
       if (order.size >= next_to_buy.size) {
         const uint32_t next_index = next_to_buy.next_index;
         const uint32_t order_id = next_to_buy.order_id;
@@ -110,9 +91,12 @@ void Matching_Engine::match_sell(Order &order) {
         inv.head = next_index;
         if (inv.head == NULL_INDEX) {
           inv.tail = NULL_INDEX;
+        } else {
+          pool[inv.head].prev_index = NULL_INDEX;
         }
         active_orders.erase(order_id);
         next_to_buy.next_index = free_head;
+        next_to_buy.prev_index = NULL_INDEX;
         free_head = current_index;
       } else {
         inv.quantity -= order.size;
@@ -138,6 +122,7 @@ void Matching_Engine::match_sell(Order &order) {
     free_head = stored_order.next_index;
     stored_order = order;
     stored_order.next_index = NULL_INDEX;
+    stored_order.prev_index = inv.tail;
 
     if (inv.is_empty()) {
       inv.head = new_index;
@@ -161,30 +146,57 @@ void Matching_Engine::cancel_order(Order &cancel_req) {
     return;
   }
 
-  Order &order = pool[it->second];
+  const uint32_t current_index = it->second;
+  Order &order = pool[current_index];
+  const uint32_t amount_cancelled =
+      cancel_req.size < order.size ? cancel_req.size : order.size;
 
-  if (order.is_canceled) {
-    std::cerr << "Error, order " << cancel_req.order_id
-              << " is already canceled. A flaw in the logic has allowed a "
-                 "canceled order to appear in the list of active orders\n"
-              << std::endl;
-    return;
-  }
-  uint32_t amount_cancelled;
+  auto unlink_order = [&](auto &book) {
+    auto price_it = book.find(order.price);
+    if (price_it == book.end()) {
+      return;
+    }
+
+    Inventory &inv = price_it->second;
+    const uint32_t prev_index = order.prev_index;
+    const uint32_t next_index = order.next_index;
+
+    if (prev_index == NULL_INDEX) {
+      inv.head = next_index;
+    } else {
+      pool[prev_index].next_index = next_index;
+    }
+
+    if (next_index == NULL_INDEX) {
+      inv.tail = prev_index;
+    } else {
+      pool[next_index].prev_index = prev_index;
+    }
+
+    inv.quantity -= amount_cancelled;
+    if (inv.is_empty()) {
+      book.erase(price_it);
+    }
+  };
 
   if (cancel_req.size >= order.size) {
-    amount_cancelled = order.size;
-    order.is_canceled = true;
-    active_orders.erase(it);
-  } else {
-    amount_cancelled = cancel_req.size;
-    order.size -= amount_cancelled;
-  }
+    if (order.buy) {
+      unlink_order(buy_book);
+    } else {
+      unlink_order(sell_book);
+    }
 
-  if (order.buy) {
-    buy_book[order.price].quantity -= amount_cancelled;
+    active_orders.erase(it);
+    order.next_index = free_head;
+    order.prev_index = NULL_INDEX;
+    free_head = current_index;
   } else {
-    sell_book[order.price].quantity -= amount_cancelled;
+    order.size -= amount_cancelled;
+    if (order.buy) {
+      buy_book.find(order.price)->second.quantity -= amount_cancelled;
+    } else {
+      sell_book.find(order.price)->second.quantity -= amount_cancelled;
+    }
   }
 }
 
