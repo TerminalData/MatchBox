@@ -16,7 +16,7 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 <details>
 <summary> Click to expand </summary>
 
-### 1.3.0
+### 1.3.1
 Refactored the entire matching-engine to use a custom linked-list that holds all orders in a pool instead of the order list in the inventory. 
 The orders point the the next free ones, and the ones inside an inventory point to their next in the FIFO queue. It's more logical to use this 
 setup since half the orders in the benchmark file are cancellations. I'm pre-allocating 2.1 mil order spaces, so this versoin is dependant on 
@@ -31,6 +31,7 @@ a known size of orders. Took my a while to understand this method.
     * Match:            155.652 ms
     * throughput MOPS:  13.3344
 
+- Reworked the cancel_order logic to work with double linked-list.
 
 ### 1.2.2
 Refactored the matching logic to use an unordered map of active_orders. Also switched canceling logic to a lazy deletion (tombstoning),
