@@ -46,8 +46,11 @@ class Matching_Engine {
   explicit Matching_Engine(std::size_t pool_size = 2100000) {
     pool.resize(pool_size);
 
-    for (uint32_t i = 0; i < pool_size - 1; ++i) {
+    pool[0].next_index = 1;
+
+    for (uint32_t i = 1; i < pool_size - 1; ++i) {
       pool[i].next_index = i + 1;
+      pool[i].prev_index = i - 1;
     }
     pool.back().next_index = NULL_INDEX;
   }

@@ -18,6 +18,7 @@ struct Order {
   // 4 byte
   uint32_t order_id;
   uint32_t next_index = NULL_INDEX;
+  uint32_t prev_index = NULL_INDEX;
 
   // 2 byte
   uint32_t size;
@@ -25,7 +26,6 @@ struct Order {
   // 1 byte
   Order_action action;
   bool buy;
-  bool is_canceled = false;
 
   Order() = default;
   Order(uint64_t p, uint32_t o, uint32_t s, Order_action a, bool b)
