@@ -34,6 +34,14 @@ void Matching_Engine::cancel_order(Order &cancel_req) {
   const uint32_t amount_cancelled =
       cancel_req.size < order.size ? cancel_req.size : order.size;
 
+  if (order.price != cancel_req.price || order.buy != cancel_req.buy) {
+    std::cerr << "Error, cancel request " << cancel_req.order_id
+              << " has a different price or buy side than the actual order "
+                 "with that ID.\n"
+              << std::endl;
+    return;
+  }
+
   auto unlink_order = [&](auto &book) {
     auto price_it = book.find(order.price);
     if (price_it == book.end()) {

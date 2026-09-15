@@ -3,136 +3,210 @@
 #include "Matching_Engine.hpp"
 #include "Order.hpp"
 
-class MatchingEngineTest : public ::testing::Test
-{
-protected:
-    Matching_Engine engine;
+class MatchingEngineTest : public ::testing::Test {
+ protected:
+  Matching_Engine engine;
 };
 
-TEST_F(MatchingEngineTest, KeepsNonCrossingOrdersAvailable)
-{
-    Order buy{100, 1, 10, Order_action::Add, true};
-    Order sell{105, 2, 10, Order_action::Add, false};
-    engine.match_order(buy);
-    engine.match_order(sell);
+TEST_F(MatchingEngineTest, KeepsNonCrossingOrdersAvailable) {
+  Order buy{100, 1, 10, Order_action::Add, true};
+  Order sell{105, 2, 10, Order_action::Add, false};
+  engine.match_order(buy);
+  engine.match_order(sell);
 
-    Order take_buy{100, 3, 10, Order_action::Add, false};
-    Order take_sell{105, 4, 10, Order_action::Add, true};
-    engine.match_order(take_buy);
-    engine.match_order(take_sell);
+  Order take_buy{100, 3, 10, Order_action::Add, false};
+  Order take_sell{105, 4, 10, Order_action::Add, true};
+  engine.match_order(take_buy);
+  engine.match_order(take_sell);
 
-    EXPECT_EQ(take_buy.size, 0);
-    EXPECT_EQ(take_sell.size, 0);
+  EXPECT_EQ(take_buy.size, 0);
+  EXPECT_EQ(take_sell.size, 0);
 }
 
-TEST_F(MatchingEngineTest, HandlesPartialFills)
-{
-    Order sell{100, 1, 10, Order_action::Add, false};
-    Order buy{100, 2, 4, Order_action::Add, true};
-    engine.match_order(sell);
-    engine.match_order(buy);
+TEST_F(MatchingEngineTest, HandlesPartialFills) {
+  Order sell{100, 1, 10, Order_action::Add, false};
+  Order buy{100, 2, 4, Order_action::Add, true};
+  engine.match_order(sell);
+  engine.match_order(buy);
 
-    EXPECT_EQ(buy.size, 0);
+  EXPECT_EQ(buy.size, 0);
 
-    Order second_buy{100, 3, 10, Order_action::Add, true};
-    engine.match_order(second_buy);
-    EXPECT_EQ(second_buy.size, 4);
+  Order second_buy{100, 3, 10, Order_action::Add, true};
+  engine.match_order(second_buy);
+  EXPECT_EQ(second_buy.size, 4);
 }
 
-TEST_F(MatchingEngineTest, FullyConsumedOrdersLeaveNoAvailableQuantity)
-{
-    Order sell{100, 1, 5, Order_action::Add, false};
-    Order buy{100, 2, 5, Order_action::Add, true};
-    engine.match_order(sell);
-    engine.match_order(buy);
+TEST_F(MatchingEngineTest, FullyConsumedOrdersLeaveNoAvailableQuantity) {
+  Order sell{100, 1, 5, Order_action::Add, false};
+  Order buy{100, 2, 5, Order_action::Add, true};
+  engine.match_order(sell);
+  engine.match_order(buy);
 
-    Order follow_up{100, 3, 1, Order_action::Add, true};
-    engine.match_order(follow_up);
-    EXPECT_EQ(follow_up.size, 1);
+  Order follow_up{100, 3, 1, Order_action::Add, true};
+  engine.match_order(follow_up);
+  EXPECT_EQ(follow_up.size, 1);
 }
 
-TEST_F(MatchingEngineTest, RespectsFifoOrderPriority)
-{
-    Order first{100, 101, 5, Order_action::Add, false};
-    Order second{100, 102, 5, Order_action::Add, false};
-    engine.match_order(first);
-    engine.match_order(second);
+TEST_F(MatchingEngineTest, RespectsFifoOrderPriority) {
+  Order first{100, 101, 5, Order_action::Add, false};
+  Order second{100, 102, 5, Order_action::Add, false};
+  engine.match_order(first);
+  engine.match_order(second);
 
-    Order partial_buy{100, 201, 7, Order_action::Add, true};
-    engine.match_order(partial_buy);
+  Order partial_buy{100, 201, 7, Order_action::Add, true};
+  engine.match_order(partial_buy);
 
-    Order cancel_second{100, 102, 3, Order_action::Cancel, false};
-    engine.match_order(cancel_second);
-    Order final_buy{100, 202, 3, Order_action::Add, true};
-    engine.match_order(final_buy);
+  Order cancel_second{100, 102, 3, Order_action::Cancel, false};
+  engine.match_order(cancel_second);
+  Order final_buy{100, 202, 3, Order_action::Add, true};
+  engine.match_order(final_buy);
 
-    EXPECT_EQ(final_buy.size, 3);
+  EXPECT_EQ(final_buy.size, 3);
 }
 
-TEST_F(MatchingEngineTest, SweepsMultiplePriceLevelsAndRestsRemainder)
-{
-    Order first_sell{100, 1, 5, Order_action::Add, false};
-    Order second_sell{101, 2, 5, Order_action::Add, false};
-    Order buy{102, 3, 15, Order_action::Add, true};
-    engine.match_order(first_sell);
-    engine.match_order(second_sell);
-    engine.match_order(buy);
+TEST_F(MatchingEngineTest, SweepsMultiplePriceLevelsAndRestsRemainder) {
+  Order first_sell{100, 1, 5, Order_action::Add, false};
+  Order second_sell{101, 2, 5, Order_action::Add, false};
+  Order buy{102, 3, 15, Order_action::Add, true};
+  engine.match_order(first_sell);
+  engine.match_order(second_sell);
+  engine.match_order(buy);
 
-    EXPECT_EQ(buy.size, 5);
+  EXPECT_EQ(buy.size, 5);
 
-    Order take_remainder{102, 4, 5, Order_action::Add, false};
-    engine.match_order(take_remainder);
-    EXPECT_EQ(take_remainder.size, 0);
+  Order take_remainder{102, 4, 5, Order_action::Add, false};
+  engine.match_order(take_remainder);
+  EXPECT_EQ(take_remainder.size, 0);
 }
 
-TEST_F(MatchingEngineTest, FullCancellationPreventsMatching)
-{
-    Order buy{100, 1, 10, Order_action::Add, true};
-    engine.match_order(buy);
+TEST_F(MatchingEngineTest, FullCancellationPreventsMatching) {
+  Order buy{100, 1, 10, Order_action::Add, true};
+  engine.match_order(buy);
 
-    Order cancel{100, 1, 10, Order_action::Cancel, true};
-    engine.match_order(cancel);
+  Order cancel{100, 1, 10, Order_action::Cancel, true};
+  engine.match_order(cancel);
 
-    Order sell{100, 2, 10, Order_action::Add, false};
-    engine.match_order(sell);
-    EXPECT_EQ(sell.size, 10);
+  Order sell{100, 2, 10, Order_action::Add, false};
+  engine.match_order(sell);
+  EXPECT_EQ(sell.size, 10);
 }
 
-TEST_F(MatchingEngineTest, PartialCancellationLeavesTheRemainingQuantity)
-{
-    Order sell{100, 1, 10, Order_action::Add, false};
-    engine.match_order(sell);
+TEST_F(MatchingEngineTest, PartialCancellationLeavesTheRemainingQuantity) {
+  Order sell{100, 1, 10, Order_action::Add, false};
+  engine.match_order(sell);
 
-    Order cancel{100, 1, 4, Order_action::Cancel, false};
-    engine.match_order(cancel);
+  Order cancel{100, 1, 4, Order_action::Cancel, false};
+  engine.match_order(cancel);
 
-    Order buy{100, 2, 10, Order_action::Add, true};
-    engine.match_order(buy);
-    EXPECT_EQ(buy.size, 4);
+  Order buy{100, 2, 10, Order_action::Add, true};
+  engine.match_order(buy);
+  EXPECT_EQ(buy.size, 4);
 }
 
-TEST_F(MatchingEngineTest, OverCancellationRemovesTheAvailableQuantity)
-{
-    Order sell{100, 1, 5, Order_action::Add, false};
-    engine.match_order(sell);
+TEST_F(MatchingEngineTest, OverCancellationRemovesTheAvailableQuantity) {
+  Order sell{100, 1, 5, Order_action::Add, false};
+  engine.match_order(sell);
 
-    Order cancel{100, 1, 20, Order_action::Cancel, false};
-    engine.match_order(cancel);
+  Order cancel{100, 1, 20, Order_action::Cancel, false};
+  engine.match_order(cancel);
 
-    Order buy{100, 2, 1, Order_action::Add, true};
-    engine.match_order(buy);
-    EXPECT_EQ(buy.size, 1);
+  Order buy{100, 2, 1, Order_action::Add, true};
+  engine.match_order(buy);
+  EXPECT_EQ(buy.size, 1);
 }
 
-TEST_F(MatchingEngineTest, MissingCancellationDoesNotCorruptTheEngine)
-{
-    Order cancel{100, 999, 10, Order_action::Cancel, true};
-    engine.match_order(cancel);
+TEST_F(MatchingEngineTest, MissingCancellationDoesNotCorruptTheEngine) {
+  Order cancel{100, 999, 10, Order_action::Cancel, true};
+  engine.match_order(cancel);
 
-    Order sell{100, 1, 5, Order_action::Add, false};
-    engine.match_order(sell);
-    Order buy{100, 2, 5, Order_action::Add, true};
-    engine.match_order(buy);
+  Order sell{100, 1, 5, Order_action::Add, false};
+  engine.match_order(sell);
+  Order buy{100, 2, 5, Order_action::Add, true};
+  engine.match_order(buy);
 
-    EXPECT_EQ(buy.size, 0);
+  EXPECT_EQ(buy.size, 0);
+}
+
+TEST_F(MatchingEngineTest, MatchesSellOrdersAgainstTheBestBuyPrices) {
+  Order low_buy{100, 1, 5, Order_action::Add, true};
+  Order high_buy{101, 2, 5, Order_action::Add, true};
+  engine.match_order(low_buy);
+  engine.match_order(high_buy);
+
+  Order sell{99, 3, 7, Order_action::Add, false};
+  engine.match_order(sell);
+
+  EXPECT_EQ(sell.size, 0);
+
+  Order remaining_sell{99, 4, 1, Order_action::Add, false};
+  engine.match_order(remaining_sell);
+  EXPECT_EQ(remaining_sell.size, 0);
+}
+
+TEST_F(MatchingEngineTest, RejectsDuplicateOrderIds) {
+  Order first{100, 1, 10, Order_action::Add, true};
+  Order duplicate{100, 1, 5, Order_action::Add, true};
+  engine.match_order(first);
+  engine.match_order(duplicate);
+
+  Order cancel{100, 1, 10, Order_action::Cancel, true};
+  engine.match_order(cancel);
+
+  Order sell{100, 2, 10, Order_action::Add, false};
+  engine.match_order(sell);
+  EXPECT_EQ(sell.size, 10);
+}
+
+TEST_F(MatchingEngineTest, RejectsCancellationWithWrongSideOrPrice) {
+  Order buy{100, 1, 10, Order_action::Add, true};
+  engine.match_order(buy);
+
+  Order wrong_side{100, 1, 10, Order_action::Cancel, false};
+  engine.match_order(wrong_side);
+  Order wrong_price{101, 1, 10, Order_action::Cancel, true};
+  engine.match_order(wrong_price);
+
+  Order sell{100, 2, 10, Order_action::Add, false};
+  engine.match_order(sell);
+  EXPECT_EQ(sell.size, 0);
+}
+
+TEST(MatchingEngineCapacityTest, PreservesRemainderWhenThePoolIsExhausted) {
+  Matching_Engine engine(1);
+  Order first{100, 1, 10, Order_action::Add, true};
+  engine.match_order(first);
+
+  Order second{101, 2, 5, Order_action::Add, true};
+  engine.match_order(second);
+
+  EXPECT_EQ(second.size, 5);
+
+  Order sell{100, 3, 10, Order_action::Add, false};
+  engine.match_order(sell);
+  EXPECT_EQ(sell.size, 0);
+}
+
+TEST_F(MatchingEngineTest, RejectsZeroSizedOrders) {
+  Order zero{100, 1, 0, Order_action::Add, true};
+  engine.match_order(zero);
+
+  Order sell{100, 2, 1, Order_action::Add, false};
+  engine.match_order(sell);
+  EXPECT_EQ(sell.size, 1);
+}
+
+TEST(MatchingEngineCapacityTest, ReusesFreedPoolEntries) {
+  Matching_Engine engine(1);
+  Order first{100, 1, 10, Order_action::Add, true};
+  engine.match_order(first);
+
+  Order cancel{100, 1, 10, Order_action::Cancel, true};
+  engine.match_order(cancel);
+
+  Order second{101, 2, 5, Order_action::Add, true};
+  engine.match_order(second);
+
+  Order sell{101, 3, 5, Order_action::Add, false};
+  engine.match_order(sell);
+  EXPECT_EQ(sell.size, 0);
 }

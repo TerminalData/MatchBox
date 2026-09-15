@@ -26,6 +26,14 @@ class Matching_Engine {
   template <typename Own_book, typename Other_book, typename Trade_rule>
   void match_against(Order& order, Own_book& own_book, Other_book& other_book,
                      Trade_rule rule) {
+    if (active_orders.contains(order.order_id)) {
+      std::cerr << "Error, this order " << order.order_id
+                << " cannot be added to the book, it already exists within "
+                   "the active list.\n"
+                << std::endl;
+      return;
+    }
+
     // If there's a matching price, sell
     while (!other_book.empty() &&
            rule(other_book.begin()->first, order.price) && order.size != 0) {
@@ -62,7 +70,7 @@ class Matching_Engine {
         other_book.erase(best_price_it);
       }
     }
-    // If there's no match, creates an order on the buy_book
+    // If there's no match, creates an order on the book
     if (order.size > 0) {
       auto& inv = own_book[order.price];
       if (free_head == NULL_INDEX) {
