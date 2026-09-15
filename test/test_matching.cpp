@@ -138,9 +138,9 @@ TEST_F(MatchingEngineTest, MatchesSellOrdersAgainstTheBestBuyPrices) {
 
   EXPECT_EQ(sell.size, 0);
 
-  Order remaining_sell{99, 4, 1, Order_action::Add, false};
+  Order remaining_sell{99, 4, 4, Order_action::Add, false};
   engine.match_order(remaining_sell);
-  EXPECT_EQ(remaining_sell.size, 0);
+  EXPECT_EQ(remaining_sell.size, 1);
 }
 
 TEST_F(MatchingEngineTest, RejectsDuplicateOrderIds) {
