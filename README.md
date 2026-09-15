@@ -16,27 +16,28 @@ use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 <details>
 <summary> Click to expand </summary>
 
-### 1.3.1
+### 1.3.2
 Refactored the entire matching-engine to use a custom linked-list that holds all orders in a pool instead of the order list in the inventory. 
-The orders point the the next free ones, and the ones inside an inventory point to their next in the FIFO queue. It's more logical to use this 
-setup since half the orders in the benchmark file are cancellations. I'm pre-allocating 2.1 mil order spaces, so this versoin is dependant on 
-a known size of orders. Took my a while to understand this method.
+The orders point the the next free ones, and the ones inside an inventory point to their next ones in the FIFO queue. It's more logical to use this 
+setup since half the orders in the benchmark file are cancellations. I'm pre-allocating 2.1 mil order spaces, so this version is dependant on 
+a known size of orders. Took me a while to understand this method.
 
-    * Parse and match:  615.462 ms
-    * throughput MOPS:  3.3723
+    * Parse and match:  607.836 ms
+    * throughput MOPS:  3.41462
 
-    * Parse:            288.63 ms
-    * throughput MOPS:  7.19097
+    * Parse:            300.035 ms
+    * throughput MOPS:  6.91761
 
-    * Match:            155.652 ms
-    * throughput MOPS:  13.3344
+    * Match:            151.151 ms
+    * throughput MOPS:  13.7314
 
 - Reworked the cancel_order logic to work with double linked-list.
+- Created a template that unifies match_sell and match_buy (match_against).
 
 ### 1.2.2
 Refactored the matching logic to use an unordered map of active_orders. Also switched canceling logic to a lazy deletion (tombstoning),
 put the book object in the engine object itself and modified the tests to work with this. It's considerably slower, my matching is now 
-more twice as long, but I think this is the way to go, it's gonna allow optimization beyond the stats I was reaching before.
+more than twice as long, but I think this is the way to go, it's gonna allow optimization beyond the stats I was reaching before.
 
     * Parse and match:  749.802 ms
     * throughput MOPS:  2.7681
