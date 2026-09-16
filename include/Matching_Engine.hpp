@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Execution.hpp"
 #include "Inventory.hpp"
 #include "Order.hpp"
 
@@ -117,7 +118,10 @@ class Matching_Engine {
   void cancel_order(Order& cancel_req);
 
  public:
-  explicit Matching_Engine(std::size_t pool_size = 2100000) {
+  std::vector<Execution>* execution_reports = nullptr;
+  explicit Matching_Engine(std::size_t pool_size = 2100000,
+                           std::vector<Execution>* reports = nullptr)
+      : execution_reports(reports) {
     pool.resize(pool_size);
 
     pool[0].next_index = 1;

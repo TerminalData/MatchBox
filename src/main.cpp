@@ -5,6 +5,7 @@
 #include <iostream>
 #include <queue>
 
+#include "Execution.hpp"
 #include "Matching_Engine.hpp"
 #include "Parser.hpp"
 #include "simdjson.h"
@@ -43,6 +44,7 @@ int main() {
 
   auto start_time = std::chrono::high_resolution_clock::now();
 
+  std::vector<Execution> report;
   Matching_Engine engine;
 
   for (auto doc : stream) {
