@@ -2,10 +2,12 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <queue>
 
 #include "Execution.hpp"
+#include "Execution_writer.hpp"
 #include "Matching_Engine.hpp"
 #include "Parser.hpp"
 #include "simdjson.h"
@@ -45,7 +47,7 @@ int main() {
   auto start_time = std::chrono::high_resolution_clock::now();
 
   std::vector<Execution> report;
-  Matching_Engine engine;
+  Matching_Engine engine(2100000, &report);
 
   for (auto doc : stream) {
     std::optional<Order> order = parse_json(doc.value());
@@ -60,11 +62,14 @@ int main() {
   auto end_time = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> final_time = end_time - start_time;
 
+  write_exec_to_file(report, "executions.txt");
+
   double throughput =
       ((total_orders * 1000.0) / final_time.count()) / 1000000.0;
 
   double cancel_ratio = (total_cancel / total_orders) * 100.0;
-
+  std::cout << "Stats includes production of report named report1.txt"
+            << std::endl;
   std::cout << "Canceled order ratio : " << cancel_ratio << "%" << std::endl;
   std::cout << "Parse and match ";
   print_result(order_count, final_time, throughput);

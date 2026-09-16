@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <vector>
+
+#include "Execution.hpp"
 #include "Matching_Engine.hpp"
 #include "Order.hpp"
 
@@ -208,6 +211,23 @@ TEST_F(MatchingEngineTest, RejectsZeroSizedOrders)
     Order sell{100, 2, 1, Order_action::Add, false};
     engine.match_order(sell);
     EXPECT_EQ(sell.size, 1);
+}
+
+TEST(MatchingEngineReportTest, RecordsPartialExecutionQuantity)
+{
+    std::vector<Execution> reports;
+    Matching_Engine engine(10, &reports);
+
+    Order sell{100, 1, 10, Order_action::Add, false};
+    Order buy{100, 2, 4, Order_action::Add, true};
+    engine.match_order(sell);
+    engine.match_order(buy);
+
+    ASSERT_EQ(reports.size(), 1);
+    EXPECT_EQ(reports[0].taker_order_id, 2);
+    EXPECT_EQ(reports[0].maker_order_id, 1);
+    EXPECT_EQ(reports[0].size, 4);
+    EXPECT_EQ(reports[0].price, 100);
 }
 
 TEST(MatchingEngineCapacityTest, ReusesFreedPoolEntries)

@@ -56,14 +56,29 @@ class Matching_Engine {
           } else {
             pool[inv.head].prev_index = NULL_INDEX;
           }
+
+          // adds transaction to report if option is selected
+          if (execution_reports != nullptr) {
+            execution_reports->push_back(
+                Execution{order.order_id, next_to_sell.order_id,
+                          next_to_sell.size, next_to_sell.price});
+          }
+
           active_orders.erase(order_id);
           next_to_sell.next_index = free_head;
           next_to_sell.prev_index = NULL_INDEX;
           free_head = current_index;
         } else {
-          next_to_sell.size -= order.size;
+          const uint32_t executed_size = order.size;
+          next_to_sell.size -= executed_size;
           inv.quantity -= order.size;
           order.size = 0;
+          // adds transaction to report if option is selected
+          if (execution_reports != nullptr) {
+            execution_reports->push_back(
+                Execution{order.order_id, next_to_sell.order_id, executed_size,
+                          next_to_sell.price});
+          }
           return;
         }
       }
