@@ -6,21 +6,30 @@ The engine maintains separate buy and sell order books, matches compatible order
 
 I am building this to learn more about low-level latency-sensitive programming.
 I plan on starting on a very basic version of a matching algorithm, and gradually
-add to it in order to make it more complete, faster and more efficient. The progress is calculated
-via a benchmark of a file I fetched from databento.com for every trade from MSFT
-on the NASDAQ for 2026, August 25 which represents 2,075,526 orders. I will always
-use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
+add to it in order to make it more complete, faster and more efficient. 
+
+The progress before v1.4.0 is calculated via a benchmark of a book replay I fetched from databento.com for every trade from MSFT
+on the NASDAQ for 2026, August 25 which represents 2,075,526 orders. I later realized that I was parsing this file without
+considering the the trades that never got on a book. A new benchmark file of a full order-entry replay will be used and described here
+for futur benchmarks, since the one prior does not really represent a live market, but an after image.
+
+I will always use a ThinkPad T14s Gen6 AMD from Lenovo to benchmark this program.
 
 ## Version History
 
 <details>
 <summary> Click to expand </summary>
 
-### 1.3.3
+### 1.3.4
 Refactored the entire matching-engine to use a custom linked-list that holds all orders in a pool instead of the order list in the inventory. 
 The orders point the the next free ones, and the ones inside an inventory point to their next ones in the FIFO queue. It's more logical to use this 
 setup since half the orders in the benchmark file are cancellations. I'm pre-allocating 2.1 mil order spaces, so this version is dependant on 
 a known size of orders. Took me a while to understand this method.
+
+I added a write to report for the transactions that take place, and realised I have been benchmarking an order book replay while ignoring the 
+actual transactions during parsing, so my program only adds to books, but never completes a transaction since no numbers ever match. I will have to
+find a new benchmark file, one that is a full order-entry replay instead. The stats will change, but I'll try to find something that has a number of 
+aroundthe 2mil mark. 
 
     * Parse and match:  607.836 ms
     * throughput MOPS:  3.41462
@@ -34,6 +43,7 @@ a known size of orders. Took me a while to understand this method.
 - Reworked the cancel_order logic to work with double linked-list.
 - Created a template that unifies match_sell and match_buy (match_against).
 - Added behavioral tests
+- Added a write to report function.
 
 ### 1.2.2
 Refactored the matching logic to use an unordered map of active_orders. Also switched canceling logic to a lazy deletion (tombstoning),
