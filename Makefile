@@ -69,7 +69,8 @@ run: $(TARGET)
 
 # Build and Run Test Suite
 .PHONY: test
-test: $(TEST_TARGET)
+test: clean
+	$(MAKE) $(TEST_TARGET)
 	./$(TEST_TARGET)
 
 # Run Valgrind memory check on the test suite

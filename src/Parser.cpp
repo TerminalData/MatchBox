@@ -34,12 +34,14 @@ bool parse_integer(std::string_view value, Integer &result) {
 std::optional<Order> parse_json(simdjson::ondemand::document_reference doc) {
   try {
     // Skip useless orders form input file
-    if (doc["action"] != "A" && doc["action"] != "C") return std::nullopt;
+    if (doc["action"] != "A" && doc["action"] != "C" && doc["action"] != "T")
+      return std::nullopt;
 
     // Extract values
     Order_action action;
-    doc["action"] == "A" ? action = Order_action::Add
-                         : action = Order_action::Cancel;
+    doc["action"] == "A" || doc["action"] == "T"
+        ? action = Order_action::Add
+        : action = Order_action::Cancel;
 
     simdjson::ondemand::value price_val = doc["price"];
     uint64_t price = 0;
@@ -69,7 +71,7 @@ std::optional<Order> parse_json(simdjson::ondemand::document_reference doc) {
     }
 
     bool buy = doc["side"] == "B" ? true : false;
-    if (order_id == 0 || size == 0 || price == 0) {
+    if (size == 0 || price == 0) {
       return std::nullopt;
     }
 

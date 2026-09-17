@@ -39,7 +39,7 @@ TEST(ParserTest, ParsesNumericStringsAndNumericValues) {
 TEST(ParserTest, IgnoresUnsupportedActions) {
   EXPECT_FALSE(
       parse_record(
-          R"({"action":"T","price":"100","size":"1","order_id":"1","side":"B"})")
+          R"({"action":"B","price":"100","size":"1","order_id":"1","side":"B"})")
           .has_value());
 }
 

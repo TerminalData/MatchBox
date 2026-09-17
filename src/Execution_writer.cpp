@@ -15,8 +15,8 @@ void write_exec_to_file(const std::vector<Execution>& executions,
   }
 
   for (const auto& exec : executions) {
-    out << "maker id: " << exec.maker_order_id
-        << ", taker id: " << exec.taker_order_id << ", size: " << exec.size
-        << ", price: " << exec.price << "\n";
+    double price = static_cast<double>(exec.price) / 1000000000.0;
+    out << " Taker id: " << exec.taker_order_id << " matched: " << exec.size
+        << " stocks at: " << price << " each.\n";
   }
 }
