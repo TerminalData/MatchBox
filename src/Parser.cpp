@@ -9,6 +9,7 @@
 #include <string_view>
 
 #include "Order.hpp"
+#include "Trade.hpp"
 #include "simdjson.h"
 
 namespace {
@@ -39,9 +40,8 @@ std::optional<Order> parse_json(simdjson::ondemand::document_reference doc) {
 
     // Extract values
     Order_action action;
-    doc["action"] == "A" || doc["action"] == "T"
-        ? action = Order_action::Add
-        : action = Order_action::Cancel;
+    doc["action"] == "A" ? action = Order_action::Add
+                         : action = Order_action::Cancel;
 
     simdjson::ondemand::value price_val = doc["price"];
     uint64_t price = 0;
@@ -70,12 +70,25 @@ std::optional<Order> parse_json(simdjson::ondemand::document_reference doc) {
       order_id = static_cast<uint32_t>(id_val.get_uint32());
     }
 
-    bool buy = doc["side"] == "B" ? true : false;
+    bool buy;
+    if (doc["side"] == "B") {
+      buy = true;
+    } else if (doc["side"] == "A") {
+      buy = false;
+    } else {
+      return std::nullopt;
+    }
+
     if (size == 0 || price == 0) {
       return std::nullopt;
     }
 
-    return Order{price, order_id, size, action, buy};
+    if (doc["action"] != "T") {
+      return Order{price, order_id, size, action, buy};
+    } else {
+      return Trade{price, size, buy};
+    }
+
   } catch (const simdjson::simdjson_error &e) {
     std::cerr << "JSON error " << e.what() << "\n";
     return std::nullopt;
